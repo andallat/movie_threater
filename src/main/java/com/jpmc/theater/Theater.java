@@ -1,10 +1,15 @@
-package com.jpmc.theater;
+package com. jpmc.theater;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.jpmc.util.LocalDateProvider;
 
 public class Theater {
 
@@ -30,24 +35,42 @@ public class Theater {
         );
     }
 
-    public Reservation reserve(Customer customer, int sequence, int howManyTickets) {
+    public Reservation reserve(Customer customer, int sequence, int howManyTickets, String resDate) {
         Showing showing;
         try {
             showing = schedule.get(sequence - 1);
+            System.out.println(showing);
         } catch (RuntimeException ex) {
             ex.printStackTrace();
             throw new IllegalStateException("not able to find any showing for given sequence " + sequence);
         }
-        return new Reservation(customer, showing, howManyTickets);
+        //return new Reservation(customer, showing, howManyTickets, provider.currentDate().toString());
+        return new Reservation(customer, showing, howManyTickets, resDate);
     }
 
     public void printSchedule() {
-        System.out.println(provider.currentDate());
-        System.out.println("===================================================");
+        
+        System.out.println("Movie Schedules in Plain Test Format:");
+        System.out.println("----------------------------------------------------------------");
         schedule.forEach(s ->
-                System.out.println(s.getSequenceOfTheDay() + ": " + s.getStartTime() + " " + s.getMovie().getTitle() + " " + humanReadableFormat(s.getMovie().getRunningTime()) + " $" + s.getMovieFee())
+                System.out.println(s.getSequenceOfTheDay() + ": " + s.getStartTime() + " " + s.getMovie().getTitle() + " " + humanReadableFormat(s.getMovie().getRunningTime()) + " $" + s.calculateFee(1, provider.currentDate().toString()))
         );
-        System.out.println("===================================================");
+        System.out.println("================================================================");
+    }
+    
+    public void printScheduleJSON() {
+        System.out.println("Movie Schedules in JSON Format:");
+        System.out.println("----------------------------------------------------------------");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        try {
+			String str = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schedule);
+			System.out.println("str"+str);
+			System.out.println("=============================================================");
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     public String humanReadableFormat(Duration duration) {
@@ -70,5 +93,7 @@ public class Theater {
     public static void main(String[] args) {
         Theater theater = new Theater(LocalDateProvider.singleton());
         theater.printSchedule();
+        theater.printScheduleJSON();
+                
     }
 }

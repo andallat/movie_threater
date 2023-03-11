@@ -1,4 +1,4 @@
-package com.jpmc.theater;
+package com.jpmc.util;
 
 import java.time.LocalDate;
 
@@ -16,6 +16,10 @@ public class LocalDateProvider {
         }
 
     public LocalDate currentDate() {
-            return LocalDate.now();
+        return LocalDate.now();
+    }
+    
+    public LocalDate parseDate(String dateStr) {
+    	return LocalDate.parse(dateStr);
     }
 }
